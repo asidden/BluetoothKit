@@ -122,7 +122,7 @@ public class BKRemotePeripheral: BKRemotePeer, BKCBPeripheralDelegate {
             peripheral(peripheral!, didDiscoverServices: nil)
             return
         }
-        peripheral?.discoverServices(configuration!.serviceScanStrategy.asServiceUUIDs)
+        peripheral?.discoverServices(configuration!.serviceUUIDs)
     }
 
     internal func unsubscribe() {

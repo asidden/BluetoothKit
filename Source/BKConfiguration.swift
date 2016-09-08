@@ -35,7 +35,7 @@ public class BKConfiguration {
     /// .Sepcific will scan only for the ones with specific UUID
     public enum ServiceScanStrategy {
         case All
-        case Specific([CBUUID])
+        case Specific
     }
 
     // MARK: Properties
@@ -47,22 +47,30 @@ public class BKConfiguration {
     public var dataServiceCharacteristicUUID: CBUUID
 
     /// Data used to indicate that no more data is coming when communicating.
-    public var endOfDataMark: NSData
+    public var endOfDataMark: NSData = "EOD".dataUsingEncoding(NSUTF8StringEncoding)!
 
     /// Data used to indicate that a transfer was cancellen when communicating.
-    public var dataCancelledMark: NSData
+    public var dataCancelledMark: NSData = "COD".dataUsingEncoding(NSUTF8StringEncoding)!
 
     internal let serviceScanStrategy: ServiceScanStrategy
+    
+    internal var serviceUUIDs: [CBUUID] {
+        let serviceUUIDs = [ dataServiceUUID ]
+        return serviceUUIDs
+    }
 
     // MARK: Initialization
 
-    public init(dataServiceUUID: NSUUID, dataServiceCharacteristicUUID: NSUUID, scanAll: Bool = false) {
-        let serviceUUID = CBUUID(NSUUID: dataServiceUUID)
-        self.dataServiceUUID = serviceUUID
+    public init(dataServiceUUID: NSUUID, dataServiceCharacteristicUUID: NSUUID, scanStrategy: ServiceScanStrategy = .Specific) {
+        self.dataServiceUUID = CBUUID(NSUUID: dataServiceUUID)
         self.dataServiceCharacteristicUUID = CBUUID(NSUUID: dataServiceCharacteristicUUID)
-        endOfDataMark = "EOD".dataUsingEncoding(NSUTF8StringEncoding)!
-        dataCancelledMark = "COD".dataUsingEncoding(NSUTF8StringEncoding)!
-        serviceScanStrategy = scanAll ? .All : .Specific([serviceUUID])
+        serviceScanStrategy = scanStrategy
+    }
+    
+    public init(dataServiceUUIDString: String, dataServiceCharacteristicUUIDString: String, scanStrategy: ServiceScanStrategy = .Specific) {
+        self.dataServiceUUID = CBUUID(string: dataServiceUUIDString)
+        self.dataServiceCharacteristicUUID = CBUUID(string: dataServiceCharacteristicUUIDString)
+        serviceScanStrategy = scanStrategy
     }
 
     // MARK Functions
@@ -76,10 +84,10 @@ public class BKConfiguration {
 
 }
 
-internal extension BKConfiguration.ServiceScanStrategy {
-    internal var asServiceUUIDs: [CBUUID]? {
-        switch self {
-        case .Specific(let uuids): return uuids
+internal extension BKConfiguration {
+    internal var serviceUUIDsForScan: [CBUUID]? {
+        switch serviceScanStrategy {
+        case .Specific: return serviceUUIDs
         case .All: return nil
         }
     }
