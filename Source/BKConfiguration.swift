@@ -29,6 +29,14 @@ import CoreBluetooth
     Class that represents a configuration used when starting a BKCentral object.
 */
 public class BKConfiguration {
+    
+    // MARK: service scan strategy enum
+    /// .All will scan for all peripherals
+    /// .Sepcific will scan only for the ones with specific UUID
+    public enum ServiceScanStrategy {
+        case All
+        case Specific([CBUUID])
+    }
 
     // MARK: Properties
 
@@ -44,18 +52,17 @@ public class BKConfiguration {
     /// Data used to indicate that a transfer was cancellen when communicating.
     public var dataCancelledMark: NSData
 
-    internal var serviceUUIDs: [CBUUID] {
-        let serviceUUIDs = [ dataServiceUUID ]
-        return serviceUUIDs
-    }
+    internal let serviceScanStrategy: ServiceScanStrategy
 
     // MARK: Initialization
 
-    public init(dataServiceUUID: NSUUID, dataServiceCharacteristicUUID: NSUUID) {
-        self.dataServiceUUID = CBUUID(NSUUID: dataServiceUUID)
+    public init(dataServiceUUID: NSUUID, dataServiceCharacteristicUUID: NSUUID, scanAll: Bool = false) {
+        let serviceUUID = CBUUID(NSUUID: dataServiceUUID)
+        self.dataServiceUUID = serviceUUID
         self.dataServiceCharacteristicUUID = CBUUID(NSUUID: dataServiceCharacteristicUUID)
         endOfDataMark = "EOD".dataUsingEncoding(NSUTF8StringEncoding)!
         dataCancelledMark = "COD".dataUsingEncoding(NSUTF8StringEncoding)!
+        serviceScanStrategy = scanAll ? .All : .Specific([serviceUUID])
     }
 
     // MARK Functions
@@ -67,4 +74,13 @@ public class BKConfiguration {
         return []
     }
 
+}
+
+internal extension BKConfiguration.ServiceScanStrategy {
+    internal var asServiceUUIDs: [CBUUID]? {
+        switch self {
+        case .Specific(let uuids): return uuids
+        case .All: return nil
+        }
+    }
 }

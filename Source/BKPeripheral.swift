@@ -208,7 +208,15 @@ public class BKPeripheral: BKPeer, BKCBPeripheralManagerDelegate, BKAvailability
 
     internal func peripheralManager(peripheral: CBPeripheralManager, didAddService service: CBService, error: NSError?) {
         if !peripheralManager.isAdvertising {
-            var advertisementData: [String: AnyObject] = [ CBAdvertisementDataServiceUUIDsKey: _configuration.serviceUUIDs ]
+            var advertisementData = [String: AnyObject]()
+            
+            if let uuids = _configuration.serviceScanStrategy.asServiceUUIDs {
+                advertisementData[CBAdvertisementDataServiceUUIDsKey] = uuids
+            } else {
+                NSLog("WARNING: using \(_configuration.serviceScanStrategy) scan strategy for setting up advertisement")
+                advertisementData[CBAdvertisementDataServiceUUIDsKey] = [_configuration.dataServiceUUID]
+            }
+            
             if let localName = _configuration.localName {
                 advertisementData[CBAdvertisementDataLocalNameKey] = localName
             }
